@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SMA icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#071123"/>
+      <stop offset="100%" stop-color="#122b4f"/>
+    </linearGradient>
+    <linearGradient id="lineA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e1ff"/>
+      <stop offset="100%" stop-color="#7af7c6"/>
+    </linearGradient>
+    <linearGradient id="lineB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8ea3ff"/>
+      <stop offset="100%" stop-color="#d5ddff"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <path d="M18 92H110" stroke="#2a4a76" stroke-width="4" stroke-linecap="round"/>
+  <path d="M18 28H18V92" stroke="#2a4a76" stroke-width="4" stroke-linecap="round"/>
+  <path d="M20 84 C34 72, 42 70, 56 58 S84 38, 108 32" fill="none" stroke="url(#lineA)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M20 70 C34 76, 44 78, 56 72 S84 56, 108 60" fill="none" stroke="url(#lineB)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="56" cy="58" r="5" fill="#8fffe0"/>
+  <circle cx="56" cy="72" r="5" fill="#dce4ff"/>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050b19"/>
+      <stop offset="100%" stop-color="#12315c"/>
+    </linearGradient>
+    <linearGradient id="lineA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e7ff"/>
+      <stop offset="100%" stop-color="#6dffc9"/>
+    </linearGradient>
+    <linearGradient id="lineB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#94a9ff"/>
+      <stop offset="100%" stop-color="#d8e0ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.25">
+    <rect x="80" y="80" width="1040" height="470" rx="24" fill="none" stroke="#3d5d86" stroke-width="2"/>
+    <path d="M120 480H1080" stroke="#3d5d86" stroke-width="2"/>
+    <path d="M120 120V480" stroke="#3d5d86" stroke-width="2"/>
+  </g>
+  <path d="M120 430 C250 350, 360 340, 500 270 S790 130, 1080 170" fill="none" stroke="url(#lineA)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M120 390 C250 440, 360 445, 500 400 S790 300, 1080 330" fill="none" stroke="url(#lineB)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="500" cy="270" r="9" fill="#88ffe2"/>
+  <circle cx="500" cy="400" r="9" fill="#dce4ff"/>
+  <text x="120" y="565" fill="#f1f7ff" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="56" font-weight="700">
+    SMA Crossover Backtester
+  </text>
+  <text x="120" y="605" fill="#b8c7de" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="26">
+    Strategy backtesting dashboard for trend-following analysis
+  </text>
+</svg>
