@@ -5,6 +5,7 @@ import { ChevronDown, TrendingUp } from "lucide-react";
 import { TickerInput } from "@/components/TickerInput";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { StatsTable } from "@/components/StatsTable";
+import { ModeTabs } from "@/components/ModeTabs";
 import { BacktestResponse, fetchBacktest, Horizon } from "@/lib/api";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +56,10 @@ const Index = () => {
             <TrendingUp className="h-5 w-5 text-primary" />
             <span className="font-semibold text-sm tracking-wide">SMA Crossover Analyzer</span>
           </div>
-          <TickerInput onSubmit={setTicker} currentTicker={ticker} />
+          <div className="flex items-center gap-3">
+            <ModeTabs />
+            <TickerInput onSubmit={setTicker} currentTicker={ticker} />
+          </div>
         </div>
       </header>
 

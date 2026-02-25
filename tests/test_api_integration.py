@@ -111,3 +111,69 @@ def test_backtest_endpoint_rejects_invalid_horizon(monkeypatch) -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_portfolio_backtest_endpoint_success(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/portfolio-backtest",
+        json={
+            "tickers": ["AAPL", "MSFT", "TSLA"],
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "horizon": "1Y",
+            "use_ranking": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["strategy"]["symbol"] == "PORTFOLIO SMA"
+    assert payload["buy_and_hold"]["symbol"] == "USER BASKET BUY&HOLD"
+    assert payload["benchmark"]["symbol"] == "SPY"
+    assert payload["strategy"]["equity_curve"][0]["equity"] == 10000
+    assert len(payload["current_holdings"]) == 3
+
+
+def test_portfolio_backtest_ranking_limits_positions(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/portfolio-backtest",
+        json={
+            "tickers": ["AAPL", "MSFT", "TSLA"],
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "horizon": "1Y",
+            "use_ranking": True,
+            "top_n": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    non_zero_weights = [h for h in payload["current_holdings"] if h["weight"] > 0]
+    assert len(non_zero_weights) <= 1
+
+
+def test_portfolio_backtest_rejects_empty_tickers(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/portfolio-backtest",
+        json={
+            "tickers": [],
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "horizon": "1Y",
+        },
+    )
+
+    assert response.status_code == 422

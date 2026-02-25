@@ -38,3 +38,26 @@ class BacktestResponse(BaseModel):
     strategy: SeriesResult
     buy_and_hold: SeriesResult
     benchmarks: list[SeriesResult]
+
+
+class PortfolioBacktestRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=1, description="User-selected tickers, e.g. ['AAPL', 'MSFT']")
+    start_date: date = Field(default=date(2005, 1, 1))
+    end_date: date | None = Field(default=None)
+    initial_capital: float = Field(default=10_000.0, gt=0)
+    horizon: Horizon = Field(default="1Y")
+    use_ranking: bool = Field(default=False)
+    top_n: int = Field(default=3, ge=1, le=25)
+
+
+class PortfolioHolding(BaseModel):
+    symbol: str
+    weight: float
+    in_market: bool
+
+
+class PortfolioBacktestResponse(BaseModel):
+    strategy: SeriesResult
+    buy_and_hold: SeriesResult
+    benchmark: SeriesResult
+    current_holdings: list[PortfolioHolding]
