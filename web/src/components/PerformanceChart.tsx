@@ -12,6 +12,7 @@ import {
 interface DataPoint {
   date: string;
   strategyValue: number | null;
+  buyAndHoldValue: number | null;
   spyValue: number | null;
   diaValue: number | null;
   qqqValue: number | null;
@@ -77,6 +78,14 @@ export function PerformanceChart({ data, ticker }: PerformanceChartProps) {
               name={`${ticker} SMA Strategy`}
               stroke="hsl(142 60% 45%)"
               strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="buyAndHoldValue"
+              name={`${ticker} Buy & Hold`}
+              stroke="hsl(160 35% 55%)"
+              strokeWidth={1.75}
               dot={false}
             />
             <Line
