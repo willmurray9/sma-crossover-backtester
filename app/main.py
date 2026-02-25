@@ -6,6 +6,7 @@ from datetime import date
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 
 from app.models.schemas import (
     BacktestRequest,
@@ -17,6 +18,8 @@ from app.models.schemas import (
 from app.services.alpaca_data import AlpacaDataError, AlpacaDataService
 from app.services.metrics import compute_metrics
 from app.services.strategy import buy_and_hold, run_sma_crossover
+
+_HORIZON_MONTHS = {"1M": 1, "6M": 6, "1Y": 12, "5Y": 60, "10Y": 120}
 
 
 app = FastAPI(title="SMA Backtesting API", version="0.1.0")
@@ -36,6 +39,40 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def _apply_horizon_window_and_rebase(
+    df: pd.DataFrame,
+    horizon: str,
+    initial_capital: float,
+    return_columns: list[str],
+    equity_columns: list[str],
+) -> pd.DataFrame:
+    if df.empty:
+        return df
+
+    latest_date = pd.Timestamp(df["date"].iloc[-1])
+    cutoff = (latest_date - pd.DateOffset(months=_HORIZON_MONTHS[horizon])).date()
+    window_df = df[df["date"] >= cutoff].copy()
+    if window_df.empty:
+        window_df = df.copy()
+
+    window_df = window_df.reset_index(drop=True)
+
+    for column in return_columns:
+        if column in window_df.columns:
+            window_df.loc[0, column] = 0.0
+
+    for column in equity_columns:
+        if column not in window_df.columns:
+            continue
+        base_equity = float(window_df.loc[0, column])
+        if base_equity <= 0:
+            window_df[column] = initial_capital
+            continue
+        window_df[column] = initial_capital * (window_df[column] / base_equity)
+
+    return window_df
+
+
 @app.post("/backtest", response_model=BacktestResponse)
 def backtest(payload: BacktestRequest) -> BacktestResponse:
     end_date = payload.end_date or date.today()
@@ -45,7 +82,14 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
     try:
         data_service = AlpacaDataService()
         ticker_df = data_service.get_weekly_bars(payload.ticker, payload.start_date, end_date)
-        strategy_df = run_sma_crossover(ticker_df, payload.initial_capital)
+        strategy_df_full = run_sma_crossover(ticker_df, payload.initial_capital)
+        strategy_df = _apply_horizon_window_and_rebase(
+            strategy_df_full,
+            payload.horizon,
+            payload.initial_capital,
+            return_columns=["ret", "strategy_ret"],
+            equity_columns=["strategy_equity", "buy_hold_equity"],
+        )
 
         strategy_metrics = compute_metrics(strategy_df["strategy_ret"])
         buy_hold_metrics = compute_metrics(strategy_df["ret"])
@@ -71,7 +115,14 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
         benchmarks: list[SeriesResult] = []
         for benchmark in ("SPY", "QQQ", "DIA"):
             benchmark_df = data_service.get_weekly_bars(benchmark, payload.start_date, end_date)
-            benchmark_curve_df = buy_and_hold(benchmark_df, payload.initial_capital)
+            benchmark_curve_df_full = buy_and_hold(benchmark_df, payload.initial_capital)
+            benchmark_curve_df = _apply_horizon_window_and_rebase(
+                benchmark_curve_df_full,
+                payload.horizon,
+                payload.initial_capital,
+                return_columns=["ret"],
+                equity_columns=["equity"],
+            )
             benchmark_metrics = compute_metrics(benchmark_curve_df["ret"])
             benchmarks.append(
                 SeriesResult(

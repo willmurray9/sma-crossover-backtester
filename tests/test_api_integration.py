@@ -67,3 +67,47 @@ def test_backtest_endpoint_upstream_error(monkeypatch) -> None:
 
     assert response.status_code == 502
     assert "rate limited" in response.json()["detail"]
+
+
+def test_backtest_endpoint_applies_horizon_window_and_rebases(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/backtest",
+        json={
+            "ticker": "AAPL",
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "horizon": "1M",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    strategy_curve = payload["strategy"]["equity_curve"]
+    spy_curve = next(item["equity_curve"] for item in payload["benchmarks"] if item["symbol"] == "SPY")
+
+    assert 0 < len(strategy_curve) < 30
+    assert strategy_curve[0]["equity"] == 10000
+    assert spy_curve[0]["equity"] == 10000
+
+
+def test_backtest_endpoint_rejects_invalid_horizon(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/backtest",
+        json={
+            "ticker": "AAPL",
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "horizon": "3Y",
+        },
+    )
+
+    assert response.status_code == 422

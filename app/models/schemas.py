@@ -1,7 +1,10 @@
 """Pydantic models used by the API layer."""
 
 from datetime import date
+from typing import Literal
 from pydantic import BaseModel, Field
+
+Horizon = Literal["1M", "6M", "1Y", "5Y", "10Y"]
 
 
 class BacktestRequest(BaseModel):
@@ -9,6 +12,7 @@ class BacktestRequest(BaseModel):
     start_date: date = Field(default=date(2005, 1, 1))
     end_date: date | None = Field(default=None)
     initial_capital: float = Field(default=10_000.0, gt=0)
+    horizon: Horizon = Field(default="1Y")
 
 
 class EquityPoint(BaseModel):

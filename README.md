@@ -36,7 +36,7 @@ cp .env.example .env
 3. Run backend API:
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 4. Run frontend (new terminal):
@@ -64,12 +64,14 @@ Request body:
   "ticker": "AAPL",
   "start_date": "2005-01-01",
   "end_date": "2025-12-31",
-  "initial_capital": 10000
+  "initial_capital": 10000,
+  "horizon": "1Y"
 }
 ```
 
 Notes:
 - `end_date` is optional. If omitted, backend uses current date.
+- `horizon` is optional. Allowed values: `1M`, `6M`, `1Y`, `5Y`, `10Y` (default `1Y`).
 - Weekly bars are fetched from Alpaca using `timeframe=1Week`.
 
 ## Testing
