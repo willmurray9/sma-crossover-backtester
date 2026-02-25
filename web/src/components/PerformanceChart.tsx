@@ -43,7 +43,8 @@ export function PerformanceChart({ data, ticker }: PerformanceChartProps) {
               tickFormatter={formatDate}
               stroke="hsl(215 12% 50%)"
               tick={{ fontSize: 11, fontFamily: "IBM Plex Mono" }}
-              interval={25}
+              interval="preserveStartEnd"
+              minTickGap={28}
             />
             <YAxis
               tickFormatter={formatValue}

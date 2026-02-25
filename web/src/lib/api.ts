@@ -23,20 +23,24 @@ export interface BacktestResponse {
   benchmarks: SeriesResult[];
 }
 
+export type Horizon = "1M" | "6M" | "1Y" | "5Y" | "10Y";
+
 interface BacktestRequest {
   ticker: string;
   start_date: string;
   end_date?: string;
   initial_capital: number;
+  horizon: Horizon;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-export async function fetchBacktest(ticker: string): Promise<BacktestResponse> {
+export async function fetchBacktest(ticker: string, horizon: Horizon): Promise<BacktestResponse> {
   const body: BacktestRequest = {
     ticker,
     start_date: "2005-01-01",
     initial_capital: 10000,
+    horizon,
   };
 
   const response = await fetch(`${API_BASE_URL}/backtest`, {
