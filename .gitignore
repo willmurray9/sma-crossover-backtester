@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.coverage
+htmlcov/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Frontend (web/)
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/.env
+web/.env.*
