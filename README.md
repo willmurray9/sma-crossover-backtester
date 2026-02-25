@@ -74,6 +74,57 @@ Notes:
 - `horizon` is optional. Allowed values: `1M`, `6M`, `1Y`, `5Y`, `10Y` (default `1Y`).
 - Weekly bars are fetched from Alpaca using `timeframe=1Week`.
 
+### `POST /portfolio-backtest`
+Request body:
+
+```json
+{
+  "tickers": ["AAPL", "MSFT", "TSLA"],
+  "start_date": "2005-01-01",
+  "end_date": "2025-12-31",
+  "initial_capital": 10000,
+  "horizon": "1Y",
+  "use_ranking": false,
+  "top_n": 3
+}
+```
+
+Notes:
+- Uses weekly SMA(5W)/SMA(20W) signal with one-bar lag per ticker.
+- If `use_ranking=true`, holds only top `top_n` active tickers by trailing momentum.
+- If no tickers are active, strategy allocation moves to cash.
+- Includes `SPY` and an equal-weight user basket buy-and-hold baseline.
+
+## Deployment (Render + Vercel)
+
+### 1) Deploy backend on Render
+
+- Connect this same GitHub repo to Render as a `Web Service`.
+- Use:
+  - Build command: `pip install -r requirements.txt`
+  - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+  - Health check path: `/health`
+- You can use the included [`render.yaml`](./render.yaml) blueprint.
+
+Set Render environment variables:
+
+- `ALPACA_API_KEY`
+- `ALPACA_API_SECRET`
+- `ALPACA_DATA_BASE_URL=https://data.alpaca.markets`
+- `ALPACA_FEED=iex`
+- `ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080,https://sma-crossover-backtester.vercel.app`
+
+### 2) Point Vercel frontend to Render backend
+
+- In Vercel project settings, add:
+  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com`
+- Redeploy Vercel.
+
+### 3) Verify
+
+- Backend health: `https://<your-render-service>.onrender.com/health`
+- Open your Vercel app and confirm network calls go to the Render URL (not `localhost`).
+
 ## Testing
 
 ```bash

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: sma-crossover-backtester-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_API_SECRET
+        sync: false
+      - key: ALPACA_DATA_BASE_URL
+        value: https://data.alpaca.markets
+      - key: ALPACA_FEED
+        value: iex
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:8080,http://127.0.0.1:8080,https://sma-crossover-backtester.vercel.app
