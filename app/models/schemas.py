@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 Horizon = Literal["1M", "6M", "1Y", "5Y", "10Y"]
+MATimeframe = Literal["weekly", "daily"]
 
 
 class BacktestRequest(BaseModel):
@@ -13,6 +14,7 @@ class BacktestRequest(BaseModel):
     end_date: date | None = Field(default=None)
     initial_capital: float = Field(default=10_000.0, gt=0)
     horizon: Horizon = Field(default="1Y")
+    ma_timeframe: MATimeframe = Field(default="weekly")
 
 
 class EquityPoint(BaseModel):

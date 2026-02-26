@@ -15,15 +15,41 @@ class _FakeDataServiceSuccess:
         prices = [base + i for i in range(30)]
         return pd.DataFrame({"date": dates, "close": prices})
 
+    def get_daily_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        return self.get_weekly_bars(symbol, start, end)
+
 
 class _FakeDataServiceFailure:
     def get_weekly_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
         raise AlpacaDataError(f"No weekly bar data returned for symbol '{symbol}'.")
 
+    def get_daily_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        raise AlpacaDataError(f"No daily bar data returned for symbol '{symbol}'.")
+
 
 class _FakeDataServiceUpstreamFailure:
     def get_weekly_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
         raise AlpacaDataError(f"Alpaca data request failed for {symbol}: 429 rate limited")
+
+    def get_daily_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        raise AlpacaDataError(f"Alpaca data request failed for {symbol}: 429 rate limited")
+
+
+class _FakeDataServiceDailyTracking(_FakeDataServiceSuccess):
+    def __init__(self) -> None:
+        self.daily_calls = 0
+        self.weekly_calls = 0
+
+    def get_weekly_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        self.weekly_calls += 1
+        return super().get_weekly_bars(symbol, start, end)
+
+    def get_daily_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        self.daily_calls += 1
+        dates = [start + timedelta(days=i) for i in range(30)]
+        base = 100.0 if symbol == "SPY" else 120.0 if symbol == "QQQ" else 90.0 if symbol == "DIA" else 110.0
+        prices = [base + i for i in range(30)]
+        return pd.DataFrame({"date": dates, "close": prices})
 
 
 def test_backtest_endpoint_success(monkeypatch) -> None:
@@ -111,6 +137,27 @@ def test_backtest_endpoint_rejects_invalid_horizon(monkeypatch) -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_backtest_endpoint_daily_timeframe_uses_daily_bars(monkeypatch) -> None:
+    fake = _FakeDataServiceDailyTracking()
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: fake)
+    client = TestClient(app)
+
+    response = client.post(
+        "/backtest",
+        json={
+            "ticker": "AAPL",
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "ma_timeframe": "daily",
+        },
+    )
+
+    assert response.status_code == 200
+    assert fake.daily_calls == 4
+    assert fake.weekly_calls == 0
 
 
 def test_portfolio_backtest_endpoint_success(monkeypatch) -> None:

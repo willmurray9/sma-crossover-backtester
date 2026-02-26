@@ -38,9 +38,15 @@ class AlpacaDataService:
         }
 
     def get_weekly_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        return self._get_bars(symbol=symbol, start=start, end=end, timeframe="1Week", timeframe_label="weekly")
+
+    def get_daily_bars(self, symbol: str, start: date, end: date) -> pd.DataFrame:
+        return self._get_bars(symbol=symbol, start=start, end=end, timeframe="1Day", timeframe_label="daily")
+
+    def _get_bars(self, symbol: str, start: date, end: date, timeframe: str, timeframe_label: str) -> pd.DataFrame:
         params: dict[str, Any] = {
             "symbols": symbol.upper(),
-            "timeframe": "1Week",
+            "timeframe": timeframe,
             "start": start.isoformat(),
             "end": end.isoformat(),
             "adjustment": "all",
@@ -103,7 +109,7 @@ class AlpacaDataService:
                     break
 
         if not all_bars:
-            raise AlpacaDataError(f"No weekly bar data returned for symbol '{symbol.upper()}'.")
+            raise AlpacaDataError(f"No {timeframe_label} bar data returned for symbol '{symbol.upper()}'.")
 
         df = pd.DataFrame(
             {
