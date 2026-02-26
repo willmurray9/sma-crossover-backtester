@@ -107,6 +107,18 @@ def _normalize_tickers(raw_tickers: list[str]) -> list[str]:
     return cleaned
 
 
+def _get_price_bars(
+    data_service: AlpacaDataService,
+    ticker: str,
+    start_date: date,
+    end_date: date,
+    ma_timeframe: str,
+) -> pd.DataFrame:
+    if ma_timeframe == "daily":
+        return data_service.get_daily_bars(ticker, start_date, end_date)
+    return data_service.get_weekly_bars(ticker, start_date, end_date)
+
+
 @app.post("/backtest", response_model=BacktestResponse)
 def backtest(payload: BacktestRequest) -> BacktestResponse:
     end_date = payload.end_date or date.today()
@@ -115,7 +127,13 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
 
     try:
         data_service = AlpacaDataService()
-        ticker_df = data_service.get_weekly_bars(payload.ticker, payload.start_date, end_date)
+        ticker_df = _get_price_bars(
+            data_service,
+            payload.ticker,
+            payload.start_date,
+            end_date,
+            payload.ma_timeframe,
+        )
         strategy_df_full = run_sma_crossover(ticker_df, payload.initial_capital)
         strategy_df = _apply_horizon_window_and_rebase(
             strategy_df_full,
@@ -148,7 +166,13 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
 
         benchmarks: list[SeriesResult] = []
         for benchmark in ("SPY", "QQQ", "DIA"):
-            benchmark_df = data_service.get_weekly_bars(benchmark, payload.start_date, end_date)
+            benchmark_df = _get_price_bars(
+                data_service,
+                benchmark,
+                payload.start_date,
+                end_date,
+                payload.ma_timeframe,
+            )
             benchmark_curve_df_full = buy_and_hold(benchmark_df, payload.initial_capital)
             benchmark_curve_df = _apply_horizon_window_and_rebase(
                 benchmark_curve_df_full,
@@ -171,7 +195,7 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
 
     except AlpacaDataError as exc:
         message = str(exc)
-        status_code = 404 if "No weekly bar data returned for symbol" in message else 502
+        status_code = 404 if "bar data returned for symbol" in message else 502
         raise HTTPException(status_code=status_code, detail=message) from exc
 
     return BacktestResponse(
