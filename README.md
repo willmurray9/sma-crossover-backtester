@@ -1,7 +1,7 @@
-# SMA Backtesting Web App
+# Strategy Backtesting Web App
 
 Monorepo with:
-- FastAPI backend for 5-week/20-week SMA crossover backtesting
+- FastAPI backend for single-ticker strategy backtesting (SMA crossover + mean reversion)
 - React/Vite frontend in `web/`
 
 Benchmarks are ETF proxies: `SPY`, `QQQ`, `DIA`.
@@ -9,7 +9,9 @@ Benchmarks are ETF proxies: `SPY`, `QQQ`, `DIA`.
 ## V1 Scope
 
 - User provides ticker + date range
-- Strategy: long-only when SMA(5w) > SMA(20w), otherwise cash
+- Strategy options:
+  - SMA crossover (long-only or long/short)
+  - Mean reversion z-score (long/short toggle + risk params)
 - Comparison outputs:
   - Strategy equity curve
   - Ticker buy-and-hold equity curve
@@ -65,14 +67,26 @@ Request body:
   "start_date": "2005-01-01",
   "end_date": "2025-12-31",
   "initial_capital": 10000,
-  "horizon": "1Y"
+  "horizon": "1Y",
+  "ma_timeframe": "weekly",
+  "strategy_type": "sma_crossover",
+  "position_mode": "long_only",
+  "mr_lookback": 20,
+  "mr_entry_z": 2.0,
+  "mr_exit_z": 0.5,
+  "mr_stop_loss_pct": 0.1,
+  "mr_max_holding_bars": 12,
+  "mr_allow_short": true
 }
 ```
 
 Notes:
 - `end_date` is optional. If omitted, backend uses current date.
 - `horizon` is optional. Allowed values: `1M`, `6M`, `1Y`, `5Y`, `10Y` (default `1Y`).
-- Weekly bars are fetched from Alpaca using `timeframe=1Week`.
+- `ma_timeframe` supports `weekly` (`1Week`) and `daily` (`1Day`) bars from Alpaca.
+- `strategy_type` supports `sma_crossover` and `mean_reversion_zscore`.
+- `position_mode` applies to SMA only (`long_only` or `long_short`).
+- Mean reversion uses `mr_*` fields (z-score thresholds, lookback, stop loss, max hold, short toggle).
 
 ### `POST /portfolio-backtest`
 Request body:

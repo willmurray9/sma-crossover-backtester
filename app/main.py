@@ -22,7 +22,7 @@ from app.models.schemas import (
 )
 from app.services.alpaca_data import AlpacaDataError, AlpacaDataService
 from app.services.metrics import compute_metrics
-from app.services.strategy import buy_and_hold, run_sma_crossover
+from app.services.strategy import buy_and_hold, run_mean_reversion_zscore, run_sma_crossover
 
 _HORIZON_MONTHS = {"1M": 1, "6M": 6, "1Y": 12, "5Y": 60, "10Y": 120}
 _DEFAULT_ALLOWED_ORIGINS = ["http://localhost:8080", "http://127.0.0.1:8080"]
@@ -119,6 +119,28 @@ def _get_price_bars(
     return data_service.get_weekly_bars(ticker, start_date, end_date)
 
 
+def _run_single_ticker_strategy(payload: BacktestRequest, ticker_df: pd.DataFrame) -> pd.DataFrame:
+    if payload.strategy_type == "mean_reversion_zscore":
+        if payload.mr_exit_z >= payload.mr_entry_z:
+            raise HTTPException(status_code=400, detail="mr_exit_z must be smaller than mr_entry_z.")
+        return run_mean_reversion_zscore(
+            ticker_df,
+            payload.initial_capital,
+            lookback=payload.mr_lookback,
+            entry_z=payload.mr_entry_z,
+            exit_z=payload.mr_exit_z,
+            stop_loss_pct=payload.mr_stop_loss_pct,
+            max_holding_bars=payload.mr_max_holding_bars,
+            allow_short=payload.mr_allow_short,
+        )
+
+    return run_sma_crossover(
+        ticker_df,
+        payload.initial_capital,
+        position_mode=payload.position_mode,
+    )
+
+
 @app.post("/backtest", response_model=BacktestResponse)
 def backtest(payload: BacktestRequest) -> BacktestResponse:
     end_date = payload.end_date or date.today()
@@ -134,11 +156,7 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
             end_date,
             payload.ma_timeframe,
         )
-        strategy_df_full = run_sma_crossover(
-            ticker_df,
-            payload.initial_capital,
-            position_mode=payload.position_mode,
-        )
+        strategy_df_full = _run_single_ticker_strategy(payload, ticker_df)
         strategy_df = _apply_horizon_window_and_rebase(
             strategy_df_full,
             payload.horizon,

@@ -21,6 +21,7 @@ interface DataPoint {
 interface PerformanceChartProps {
   data: DataPoint[];
   ticker: string;
+  strategyLabel: string;
 }
 
 const formatValue = (v: number) => `$${v.toLocaleString()}`;
@@ -29,7 +30,7 @@ const formatDate = (d: string) => {
   return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 };
 
-export function PerformanceChart({ data, ticker }: PerformanceChartProps) {
+export function PerformanceChart({ data, ticker, strategyLabel }: PerformanceChartProps) {
   return (
     <div className="bg-card border border-border rounded p-5">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
@@ -75,7 +76,7 @@ export function PerformanceChart({ data, ticker }: PerformanceChartProps) {
             <Line
               type="monotone"
               dataKey="strategyValue"
-              name={`${ticker} SMA Strategy`}
+              name={`${ticker} ${strategyLabel}`}
               stroke="hsl(142 60% 45%)"
               strokeWidth={2}
               dot={false}
