@@ -134,7 +134,11 @@ def backtest(payload: BacktestRequest) -> BacktestResponse:
             end_date,
             payload.ma_timeframe,
         )
-        strategy_df_full = run_sma_crossover(ticker_df, payload.initial_capital)
+        strategy_df_full = run_sma_crossover(
+            ticker_df,
+            payload.initial_capital,
+            position_mode=payload.position_mode,
+        )
         strategy_df = _apply_horizon_window_and_rebase(
             strategy_df_full,
             payload.horizon,
