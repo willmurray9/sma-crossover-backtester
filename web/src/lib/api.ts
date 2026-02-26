@@ -39,6 +39,7 @@ export interface PortfolioBacktestResponse {
 export type Horizon = "1M" | "6M" | "1Y" | "5Y" | "10Y";
 export type MATimeframe = "weekly" | "daily";
 export type PositionMode = "long_only" | "long_short";
+export type StrategyType = "sma_crossover" | "mean_reversion_zscore";
 
 interface BacktestRequest {
   ticker: string;
@@ -48,6 +49,22 @@ interface BacktestRequest {
   horizon: Horizon;
   ma_timeframe: MATimeframe;
   position_mode: PositionMode;
+  strategy_type: StrategyType;
+  mr_lookback: number;
+  mr_entry_z: number;
+  mr_exit_z: number;
+  mr_stop_loss_pct?: number;
+  mr_max_holding_bars?: number;
+  mr_allow_short: boolean;
+}
+
+export interface MeanReversionParams {
+  lookback: number;
+  entryZ: number;
+  exitZ: number;
+  stopLossPct?: number;
+  maxHoldingBars?: number;
+  allowShort: boolean;
 }
 
 interface PortfolioBacktestRequest {
@@ -66,7 +83,9 @@ export async function fetchBacktest(
   ticker: string,
   horizon: Horizon,
   maTimeframe: MATimeframe,
-  positionMode: PositionMode
+  positionMode: PositionMode,
+  strategyType: StrategyType,
+  meanReversion: MeanReversionParams
 ): Promise<BacktestResponse> {
   const body: BacktestRequest = {
     ticker,
@@ -75,6 +94,13 @@ export async function fetchBacktest(
     horizon,
     ma_timeframe: maTimeframe,
     position_mode: positionMode,
+    strategy_type: strategyType,
+    mr_lookback: meanReversion.lookback,
+    mr_entry_z: meanReversion.entryZ,
+    mr_exit_z: meanReversion.exitZ,
+    mr_stop_loss_pct: meanReversion.stopLossPct,
+    mr_max_holding_bars: meanReversion.maxHoldingBars,
+    mr_allow_short: meanReversion.allowShort,
   };
 
   const response = await fetch(`${API_BASE_URL}/backtest`, {
