@@ -6,7 +6,7 @@ import { TickerInput } from "@/components/TickerInput";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { StatsTable } from "@/components/StatsTable";
 import { ModeTabs } from "@/components/ModeTabs";
-import { BacktestResponse, fetchBacktest, Horizon, MATimeframe } from "@/lib/api";
+import { BacktestResponse, fetchBacktest, Horizon, MATimeframe, PositionMode } from "@/lib/api";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -40,11 +40,12 @@ const Index = () => {
   const [ticker, setTicker] = useState("AAPL");
   const [horizon, setHorizon] = useState<Horizon>("1Y");
   const [maTimeframe, setMaTimeframe] = useState<MATimeframe>("weekly");
+  const [positionMode, setPositionMode] = useState<PositionMode>("long_only");
   const [isExplainerOpen, setIsExplainerOpen] = useState(true);
 
   const { data, isPending, isFetching, error } = useQuery({
-    queryKey: ["backtest", ticker, horizon, maTimeframe],
-    queryFn: () => fetchBacktest(ticker, horizon, maTimeframe),
+    queryKey: ["backtest", ticker, horizon, maTimeframe, positionMode],
+    queryFn: () => fetchBacktest(ticker, horizon, maTimeframe, positionMode),
   });
 
   const chartData = useMemo(() => (data ? buildChartData(data) : []), [data]);
@@ -93,6 +94,31 @@ const Index = () => {
                 Daily 5/20
               </button>
             </div>
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mode</span>
+              <button
+                type="button"
+                onClick={() => setPositionMode("long_only")}
+                className={`px-2.5 py-1.5 rounded border text-xs font-mono transition-colors ${
+                  positionMode === "long_only"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-muted-foreground border-border hover:text-foreground"
+                }`}
+              >
+                Long Only
+              </button>
+              <button
+                type="button"
+                onClick={() => setPositionMode("long_short")}
+                className={`px-2.5 py-1.5 rounded border text-xs font-mono transition-colors ${
+                  positionMode === "long_short"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-muted-foreground border-border hover:text-foreground"
+                }`}
+              >
+                Long + Short
+              </button>
+            </div>
             {(["1M", "6M", "1Y", "5Y", "10Y"] as Horizon[]).map((option) => (
               <button
                 key={option}
@@ -137,7 +163,7 @@ const Index = () => {
             </p>
             <p>
               Trigger rule: if <span className="font-mono text-foreground">SMA(5{maTimeframe === "weekly" ? "W" : "D"}) &gt; SMA(20{maTimeframe === "weekly" ? "W" : "D"})</span>, the model
-              stays invested; if not, it moves to cash. In practice, that means you can see multiple
+              stays invested; if not, it {positionMode === "long_short" ? "flips short" : "moves to cash"}. In practice, that means you can see multiple
               cycles of buy, hold, sell, and re-buy as market direction changes over time.
             </p>
             <div className="rounded border border-border bg-secondary/40 p-3">

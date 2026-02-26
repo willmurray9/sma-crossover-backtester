@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 Horizon = Literal["1M", "6M", "1Y", "5Y", "10Y"]
 MATimeframe = Literal["weekly", "daily"]
+PositionMode = Literal["long_only", "long_short"]
 
 
 class BacktestRequest(BaseModel):
@@ -15,6 +16,7 @@ class BacktestRequest(BaseModel):
     initial_capital: float = Field(default=10_000.0, gt=0)
     horizon: Horizon = Field(default="1Y")
     ma_timeframe: MATimeframe = Field(default="weekly")
+    position_mode: PositionMode = Field(default="long_only")
 
 
 class EquityPoint(BaseModel):

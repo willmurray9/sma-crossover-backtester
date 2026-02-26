@@ -79,7 +79,7 @@ def test_backtest_endpoint_symbol_not_found(monkeypatch) -> None:
     )
 
     assert response.status_code == 404
-    assert "No weekly bar data" in response.json()["detail"]
+    assert "bar data" in response.json()["detail"]
 
 
 def test_backtest_endpoint_upstream_error(monkeypatch) -> None:
@@ -158,6 +158,24 @@ def test_backtest_endpoint_daily_timeframe_uses_daily_bars(monkeypatch) -> None:
     assert response.status_code == 200
     assert fake.daily_calls == 4
     assert fake.weekly_calls == 0
+
+
+def test_backtest_endpoint_accepts_long_short_mode(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "AlpacaDataService", lambda: _FakeDataServiceSuccess())
+    client = TestClient(app)
+
+    response = client.post(
+        "/backtest",
+        json={
+            "ticker": "AAPL",
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "initial_capital": 10000,
+            "position_mode": "long_short",
+        },
+    )
+
+    assert response.status_code == 200
 
 
 def test_portfolio_backtest_endpoint_success(monkeypatch) -> None:

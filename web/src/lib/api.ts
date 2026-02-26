@@ -38,6 +38,7 @@ export interface PortfolioBacktestResponse {
 
 export type Horizon = "1M" | "6M" | "1Y" | "5Y" | "10Y";
 export type MATimeframe = "weekly" | "daily";
+export type PositionMode = "long_only" | "long_short";
 
 interface BacktestRequest {
   ticker: string;
@@ -46,6 +47,7 @@ interface BacktestRequest {
   initial_capital: number;
   horizon: Horizon;
   ma_timeframe: MATimeframe;
+  position_mode: PositionMode;
 }
 
 interface PortfolioBacktestRequest {
@@ -63,7 +65,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000
 export async function fetchBacktest(
   ticker: string,
   horizon: Horizon,
-  maTimeframe: MATimeframe
+  maTimeframe: MATimeframe,
+  positionMode: PositionMode
 ): Promise<BacktestResponse> {
   const body: BacktestRequest = {
     ticker,
@@ -71,6 +74,7 @@ export async function fetchBacktest(
     initial_capital: 10000,
     horizon,
     ma_timeframe: maTimeframe,
+    position_mode: positionMode,
   };
 
   const response = await fetch(`${API_BASE_URL}/backtest`, {
